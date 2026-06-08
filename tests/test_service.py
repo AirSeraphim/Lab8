@@ -61,3 +61,25 @@ def test_search_requests(setup_db, capsys):
     # Поиск по проблеме (частичное совпадение, регистронезависимо)
     results = service.search_requests("экран")
     assert len(results) == 2
+
+def test_search_requests_case_insensitive(setup_db):
+    client_id = service.add_client("Тест", "999888777")
+    service.create_request(client_id, "Ноутбук", "Разбит экран")
+    
+    # Поиск в разных регистрах
+    assert len(service.search_requests("ЭКРАН")) == 1
+    assert len(service.search_requests("экран")) == 1
+    assert len(service.search_requests("Экран")) == 1
+
+def test_search_no_results(setup_db):
+    results = service.search_requests("НесуществующееУстройство")
+    assert len(results) == 0
+
+def test_get_requests_nonexistent_client(setup_db):
+    reqs = service.get_client_requests(99999)
+    assert len(reqs) == 0
+
+def test_update_status_nonexistent_request(setup_db):
+    # Попытка обновить несуществующую заявку
+    service.update_status(99999, "in_progress")
+    # Должно либо вернуть False/None, либо вывести ошибку
